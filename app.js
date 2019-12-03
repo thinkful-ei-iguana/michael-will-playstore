@@ -9,36 +9,46 @@ app.use(morgan('dev'));
 app.use(cors());
 
 app.get('/apps', (req, res) => {
-  const {sort, genres} = req.query;
+  const {sort, genres = ''} = req.query;
+ 
+  if(sort){
+    if(!['rating', 'app'].includes(sort)) {
+      return res
+        .status(400)
+        .send('Sort must be by rating, or by app name.');
+    }
+  }
 
-  // if(sort){
-  //   if(!['rating', 'app'].includes(sort)) {
-  //     return res.json();
-  //   }
-  // }
-
-  // if(genres){
-  //   if(!['action', 'puzzle', 'strategy', 'casual', 'arcade', 'card'].includes(genres)){
-  //     return res
-  //       .status(400)
-  //       .send('Genre must be one of the following: Action, Puzzle, Strategy, Casual, Arcade, or Card.');
-  //   }
-  //   return res.json();
-  // }
+  if(genres){
+    if(!['action', 'puzzle', 'strategy', 'casual', 'arcade', 'card'].includes(genres)){
+      return res
+        .status(400)
+        .send('Genre must be one of the following: Action, Puzzle, Strategy, Casual, Arcade, or Card.');
+    }
+  }
 
   let results = playstore
     .filter(singleApp => 
       singleApp
-        .App
+        .Genres
         .toLowerCase()
-        .includes(sort.toLowerCase())
+        .includes(genres.toLowerCase())
     );
-  if(sort){
+  
+  if(sort === 'app'){
     results
       .sort((a,b) => {
-        return a[sort] > b[sort] ? 1 : a[sort] < b[sort] ? -1 : 0;
+        return a.App > b.App ? 1 : a.App < b.App ? -1 : 0;
       });
   }
+
+  if(sort === 'rating'){
+    results
+      .sort((a,b) => {
+        return a.Rating > b.Rating ? -1 : a.Rating < b.Rating ? 1 : 0;
+      });
+  }
+
   res.
     json(results);
 });
